@@ -1,0 +1,14 @@
+OBJDIRS += user/dbtest
+
+DBTEST_SRCFILES :=    \
+	dbtest.cc
+
+DBTEST_OBJFILES := $(DBTEST_SRCFILES)
+DBTEST_OBJFILES := $(patsubst %.c, $(OBJDIR)/user/dbtest/%.o, $(DBTEST_OBJFILES))
+DBTEST_OBJFILES := $(patsubst %.cc, $(OBJDIR)/user/dbtest/%.o, $(DBTEST_OBJFILES))
+
+
+$(OBJDIR)/user/dbtest/%.o: PER_TARGET_CFLAGS=-I$(TOP)/user/dbtest
+$(OBJDIR)/user/dbtest.debuginfo: $(DBTEST_OBJFILES)
+$(OBJDIR)/user/dbtest.debuginfo: PER_TARGET_OBJS=$(DBTEST_OBJFILES)
+

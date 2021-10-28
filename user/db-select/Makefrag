@@ -1,0 +1,13 @@
+
+OBJDIRS += user/db-select
+
+DBSELECT_SRCFILES := db-select.c
+
+DBSELECT_OBJFILES := $(DBSELECT_SRCFILES)
+DBSELECT_OBJFILES := $(patsubst %.c, $(OBJDIR)/user/db-select/%.o, $(DBSELECT_OBJFILES))
+DBSELECT_OBJFILES := $(patsubst %.cc, $(OBJDIR)/user/db-select/%.o, $(DBSELECT_OBJFILES))
+
+$(OBJDIR)/user/db-select/%.o: PER_TARGET_CFLAGS=-I$(TOP)/user/db-select -DRD_TSC
+$(OBJDIR)/user/db-select.debuginfo: $(DBSELECT_OBJFILES) 
+$(OBJDIR)/user/db-select.debuginfo: PER_TARGET_OBJS=$(DBSELECT_OBJFILES)
+

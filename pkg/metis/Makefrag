@@ -1,0 +1,31 @@
+OBJDIRS += pkg/metis
+
+LIBMETIS_CSRC := 	mr-sched.c 		\
+		  	openhbb.c 		\
+			intermediate.c		\
+			append.c 		\
+			keyset.c 		\
+			kvhandler.c 		\
+			btree.c 		\
+			btree_leaf_array.c	\
+			btreekv.c 		\
+			btree_leaf_hash.c 	\
+			mr-thread.c
+
+USER_INC += -I$(TOP)/pkg/metis
+
+LIBMETIS_SRCFILES += $(patsubst %.c, pkg/metis/%.c, $(LIBMETIS_CSRC))
+
+LIBMETIS_OBJFILES := $(patsubst %.c,  $(OBJDIR)/%.o, $(LIBMETIS_SRCFILES))
+
+LIBMETIS_GCCFLAGS = $(USER_CFLAGS) $(CFLAGS_LIB_SHARED) -Ipkg/metis/ -Wall -O3
+
+$(OBJDIR)/pkg/metis/%.o: pkg/metis/%.c
+	@mkdir -p $(@D)
+	$(CC) $(LIBMETIS_GCCFLAGS) -c -o $@ $<
+
+$(OBJDIR)/lib/libmetis.a: $(LIBMETIS_OBJFILES) 
+	@mkdir -p $(@D)
+	rm -f $@
+	$(AR) r $@ $(LIBMETIS_OBJFILES)
+

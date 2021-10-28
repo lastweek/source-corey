@@ -1,0 +1,128 @@
+
+SQLITE3 = sqlite3
+
+SQLITE3_TOP = pkg/$(SQLITE3)
+
+SQLITE3_INCLUDES := \
+	-I$(TOP)/pkg/$(SQLITE3)/ \
+	-I$(TOP)/pkg/$(SQLITE3)/src/ 
+
+OBJDIRS += pkg/$(SQLITE3)/josmp/ \
+	pkg/$(SQLITE3)/src/ \
+	pkg/$(SQLITE3)/
+
+# USER_INC += $(SQLITE3_INCLUDES)
+
+SQLITE3_CFLAGS := $(SQLITE3_INCLUDES) -DJOSMP_USER -DOS_OTHER -DOS_JOSMP=1 -DNDEBUG -DHAVE_READLINE=0 -DSQLITE_THREADSAFE=1 -DSQLITE_THREAD_OVERRIDE_LOCK=-1 -DTEMP_STORE=3 -DSQLITE_OMIT_LOAD_EXTENSION=1
+#SQLITE3_CFLAGS := $(SQLITE3_INCLUDES) -DJOSMP_USER -DOS_OTHER -DOS_JOSMP=1 -DSQLITE_DEBUG -DHAVE_READLINE=0 -DSQLITE_THREADSAFE=1 -DSQLITE_THREAD_OVERRIDE_LOCK=-1 -DTEMP_STORE=3 -DSQLITE_OMIT_LOAD_EXTENSION=1
+
+SQLITE3_SRCFILES += \
+	$(SQLITE3_TOP)/src/alter.c \
+	$(SQLITE3_TOP)/src/analyze.c \
+	$(SQLITE3_TOP)/src/attach.c \
+	$(SQLITE3_TOP)/src/auth.c \
+	$(SQLITE3_TOP)/src/bitvec.c \
+	$(SQLITE3_TOP)/src/btmutex.c \
+	$(SQLITE3_TOP)/src/btree.c \
+	$(SQLITE3_TOP)/src/btree.h \
+	$(SQLITE3_TOP)/src/btreeInt.h \
+	$(SQLITE3_TOP)/src/build.c \
+	$(SQLITE3_TOP)/src/callback.c \
+	$(SQLITE3_TOP)/src/complete.c \
+	$(SQLITE3_TOP)/src/config.h \
+	$(SQLITE3_TOP)/src/date.c \
+	$(SQLITE3_TOP)/src/delete.c \
+	$(SQLITE3_TOP)/src/expr.c \
+	$(SQLITE3_TOP)/src/fault.c \
+	$(SQLITE3_TOP)/src/func.c \
+	$(SQLITE3_TOP)/src/hash.c \
+	$(SQLITE3_TOP)/src/hash.h \
+	$(SQLITE3_TOP)/src/insert.c \
+	$(SQLITE3_TOP)/src/journal.c \
+	$(SQLITE3_TOP)/src/legacy.c \
+	$(SQLITE3_TOP)/src/loadext.c \
+	$(SQLITE3_TOP)/src/main.c \
+	$(SQLITE3_TOP)/src/malloc.c \
+	$(SQLITE3_TOP)/src/mem1.c \
+	$(SQLITE3_TOP)/src/mem2.c \
+	$(SQLITE3_TOP)/src/mem3.c \
+	$(SQLITE3_TOP)/src/mem4.c \
+	$(SQLITE3_TOP)/src/mem5.c \
+	$(SQLITE3_TOP)/src/mutex.c \
+	$(SQLITE3_TOP)/src/mutex.h \
+	$(SQLITE3_TOP)/src/mutex_os2.c \
+	$(SQLITE3_TOP)/josmp/mutex_josmp.c \
+	$(SQLITE3_TOP)/src/mutex_unix.c \
+	$(SQLITE3_TOP)/src/mutex_w32.c \
+	$(SQLITE3_TOP)/src/os.c \
+	$(SQLITE3_TOP)/src/os.h \
+	$(SQLITE3_TOP)/src/os_common.h \
+	$(SQLITE3_TOP)/src/os_os2.c \
+	$(SQLITE3_TOP)/josmp/os_josmp.c \
+	$(SQLITE3_TOP)/josmp/userfs.c \
+	$(SQLITE3_TOP)/src/os_unix.c \
+	$(SQLITE3_TOP)/src/os_win.c \
+	$(SQLITE3_TOP)/src/pager.c \
+	$(SQLITE3_TOP)/src/pager.h \
+	$(SQLITE3_TOP)/src/parse.y \
+	$(SQLITE3_TOP)/src/pragma.c \
+	$(SQLITE3_TOP)/src/prepare.c \
+	$(SQLITE3_TOP)/src/printf.c \
+	$(SQLITE3_TOP)/src/random.c \
+	$(SQLITE3_TOP)/src/select.c \
+	$(SQLITE3_TOP)/src/shell.c \
+	$(SQLITE3_TOP)/src/sqlite.h.in \
+	$(SQLITE3_TOP)/src/sqlite3ext.h \
+	$(SQLITE3_TOP)/src/sqliteInt.h \
+	$(SQLITE3_TOP)/src/sqliteLimit.h \
+	$(SQLITE3_TOP)/src/table.c \
+	$(SQLITE3_TOP)/src/tokenize.c \
+	$(SQLITE3_TOP)/src/trigger.c \
+	$(SQLITE3_TOP)/src/utf.c \
+	$(SQLITE3_TOP)/src/update.c \
+	$(SQLITE3_TOP)/src/util.c \
+	$(SQLITE3_TOP)/src/vacuum.c \
+	$(SQLITE3_TOP)/src/vdbe.c \
+	$(SQLITE3_TOP)/src/vdbe.h \
+	$(SQLITE3_TOP)/src/vdbeapi.c \
+	$(SQLITE3_TOP)/src/vdbeaux.c \
+	$(SQLITE3_TOP)/src/vdbeblob.c \
+	$(SQLITE3_TOP)/src/vdbefifo.c \
+	$(SQLITE3_TOP)/src/vdbemem.c \
+	$(SQLITE3_TOP)/src/vdbeInt.h \
+	$(SQLITE3_TOP)/src/vtab.c \
+	$(SQLITE3_TOP)/src/where.c
+
+# Generated source code files
+#
+#SQLITE3_SRCFILES += \
+#	$(SQLITE3_TOP)/keywordhash.h \
+#	$(SQLITE3_TOP)/opcodes.c \
+#	$(SQLITE3_TOP)/opcodes.h \
+#	$(SQLITE3_TOP)/parse.c \
+#	$(SQLITE3_TOP)/parse.h \
+#	$(SQLITE3_TOP)/sqlite3.h
+
+SQLITE3_SRCFILES += \
+	$(SQLITE3_TOP)/opcodes.c \
+	$(SQLITE3_TOP)/parse.c \
+
+SQLITE3_OBJFILES := $(patsubst %.c, $(OBJDIR)/%.o, $(SQLITE3_SRCFILES))
+
+$(OBJDIR)/pkg/$(SQLITE3)/josmp/%.o: pkg/$(SQLITE3)/josmp/%.c 
+	@mkdir -p $(@D)
+	$(CC) $(USER_COMFLAGS) $(CSTD) $(CFLAGS_LIB_SHARED) $(SQLITE3_CFLAGS) -c -o $@ $<
+
+$(OBJDIR)/pkg/$(SQLITE3)/src/%.o: pkg/$(SQLITE3)/src/%.c
+	@mkdir -p $(@D)
+	$(CC) $(USER_COMFLAGS) $(CSTD) $(CFLAGS_LIB_SHARED) $(SQLITE3_CFLAGS) -c -o $@ $<
+
+$(OBJDIR)/pkg/$(SQLITE3)/%.o: pkg/$(SQLITE3)/%.c
+	@mkdir -p $(@D)
+	$(CC) $(USER_COMFLAGS) $(CSTD) $(CFLAGS_LIB_SHARED) $(SQLITE3_CFLAGS) -c -o $@ $<
+
+$(OBJDIR)/lib/libsqlite3.a: $(SQLITE3_OBJFILES)
+	@mkdir -p $(@D)
+	echo $(AR) r $@ $(SQLITE3_OBJFILES)
+	$(AR) r $@ $(SQLITE3_OBJFILES)
+

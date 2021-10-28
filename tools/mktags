@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+set -o errexit -o nounset
+
+srcdirs=( boot guest inc kern lib user )
+
+svn -q up
+make -s clean
+
+# tags
+
+ctags-exuberant -R
+cscope -b -q -k -R
+
+# documentation
+
+# find "${srcdirs[@]}" -name '*.[ch]' |
+# sed 's|^|/** \\file |; s|$| */|' > tools/src-files
+
+# doxygen tools/Doxyfile
+
+# build
+
+make -s -j2

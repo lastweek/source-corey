@@ -1,0 +1,13 @@
+
+OBJDIRS += user/sqlite-test
+
+DBTEST_SRCFILES :=	\
+	user/sqlite-test/sqlite-test.c
+
+DBTEST_OBJFILES := $(DBTEST_SRCFILES)
+DBTEST_OBJFILES := $(patsubst user/sqlite-test/%.c, $(OBJDIR)/user/sqlite-test/%.o, $(DBTEST_SRCFILES))
+
+$(OBJDIR)/user/sqlite-test/%.o: PER_TARGET_CFLAGS=-I$(TOP)/user/sqlite-test -DHAVE_LOCALTIME_R=0
+$(OBJDIR)/user/sqlite-test.debuginfo: $(DBTEST_OBJFILES)
+$(OBJDIR)/user/sqlite-test.debuginfo: PER_TARGET_OBJS=$(DBTEST_OBJFILES)
+

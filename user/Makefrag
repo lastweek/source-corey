@@ -1,0 +1,27 @@
+include user/simple/Makefrag
+include user/test/Makefrag
+include user/httpd/Makefrag
+include user/sqlite-test/Makefrag
+include user/sqlitec/Makefrag
+include user/dbtest/Makefrag
+include user/db_join/Makefrag
+include user/metis/Makefrag
+
+LIBOS_CFLAGS   = $(USER_CFLAGS)
+LIBOS_CXXFLAGS = $(USER_CXXFLAGS)
+
+$(OBJDIR)/user/%.o: user/%.c
+	@mkdir -p $(@D)
+	$(CC) $(LIBOS_CFLAGS) $(CSTD) -D_GNU_SOURCE -Werror -c -o $@ $< $(PER_TARGET_CFLAGS)
+
+$(OBJDIR)/user/%.o: user/%.cc
+	@mkdir -p $(@D)
+	$(CXX) $(LIBOS_CXXFLAGS) -Werror -c -o $@ $< $(PER_TARGET_CFLAGS)
+
+$(OBJDIR)/user/%.debuginfo: $(LDEPS)
+	$(CC) -o $@ $(PER_TARGET_OBJS) $(LDFLAGS)
+
+$(OBJDIR)/user/%.elf: $(OBJDIR)/user/%.debuginfo
+	$(STRIP) $< -o $@
+
+.PRECIOUS: $(OBJDIR)/user/%.elf

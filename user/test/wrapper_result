@@ -1,0 +1,33 @@
+fd wrapper 	cycles		raw operation	cycles
+
+mkdir		264045		fs_mkdir	95530
+creat		374002		fs_create	99139
+open		218996		fs_dlookup	43148
+write		3838431		fs_pwrite	3734784
+read		2342814		fs_pread	2247412
+
+socket		43310		lsocket		4235
+close		30771		lclose		4553
+bind		8141		lbind		3993
+listen		8115		llisten		4202
+connect		204400		lconnect	217476
+accept		195215		laccept		208261
+read		221486		lread		221703
+write		26610		lwrite		24879
+
+Table 1:Performance comparison between the file descriptor
+wrapper and raw operations(cycles).
+
+fd operations
+fd_lookup	2670
+dev_lookup	126
+fd_alloc	43291
+fd_free		20965
+
+Table 2:Performance of the primitive fd operations.
+
+For mkdir, creat and open tests, the fd wrapper have to resolve the
+two level parent directory, which involves two fs_dlookup.
+
+From the table 1, we can see that for read and write operations, the 
+overhead of wrapper routines is never important.

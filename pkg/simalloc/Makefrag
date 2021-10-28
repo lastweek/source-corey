@@ -1,0 +1,20 @@
+OBJDIRS += pkg/simalloc
+
+LIBSIMALLOC_CSRC = simalloc.c
+#LIBSIMALLOC_CSRC = simalloc-sbw.c
+
+LIBSIMALLOC_SRCFILES += $(patsubst %.c, pkg/simalloc/%.c, $(LIBSIMALLOC_CSRC))
+
+LIBSIMALLOC_OBJFILES := $(patsubst %.c,  $(OBJDIR)/%.o, $(LIBSIMALLOC_SRCFILES))
+
+LIBSIMALLOC_GCCFLAGS = $(USER_CFLAGS) $(CFLAGS_LIB_SHARED) -Wall $(BITS) -fno-strict-aliasing $(FPIC) -O3 -std=gnu99
+
+$(OBJDIR)/pkg/simalloc/%.o: pkg/simalloc/%.c
+	@mkdir -p $(@D)
+	$(CC) $(LIBSIMALLOC_GCCFLAGS) -c -o $@ $<
+
+$(OBJDIR)/lib/libsimalloc.a: $(LIBSIMALLOC_OBJFILES)
+	@mkdir -p $(@D)
+	rm -f $@
+	$(AR) r $@ $(LIBSIMALLOC_OBJFILES)
+

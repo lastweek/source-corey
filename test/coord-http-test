@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+# From josmp, run this script with 'serve' to start the servers.  From a
+# coordinator host, run this script with 'setup' first to establish listeners.
+# Then run with 'run' to launch the httpc's.  Finally, terminate the 'serve'
+# job by hitting enter, which will produce snapshot the lock_stat into
+# /tmp/lock_stat.  Now you can process the results using
+# /mpdev/josmp/linux/bench/osdi/eval/.
+
+set -o errexit -o nounset
+
+port=9876
+
+serve() {
+  pkill net || true
+  obj/test/net &
+  local pid=$!
+  sudo su - -c 'echo 0 > /proc/lock_stat'
+  read
+  sudo cat /proc/lock_stat > /tmp/lock_stat
+  kill -sigint $pid
+}
+
+setup() {
+  vxargs -a test/hosts -o /tmp/out -y -p \
+    ssh -o StrictHostKeyChecking=no {} "
+      pkill -x nc
+      while true; do nc -l $port; done | bash
+    "
+  tail /tmp/out/*
+}
+
+ncores=16
+shosts=( 18.26.4.96 18.26.4.122 )
+run() {
+  i=0
+  cat test/hosts |
+  while read host ; do
+    shost=${shosts[$(( i % ${#shosts[@]} ))]}
+    sport=$(( 8000 + ( ( i / ${#shosts[@]} ) % ncores ) ))
+    # echo "echo "josmp/obj/test/httpc $shost $sport -q -r" | nc -q1 $host $port &"
+    echo "josmp/obj/test/httpc $shost $sport -q -r" | nc -q1 $host $port &
+    # echo "echo hello" | nc -q1 $host $port &
+    let ++i
+  done
+  tail -s 0.1 -f /tmp/out/oc-*.err
+}
+
+"$@"

@@ -1,0 +1,84 @@
+
+LUA = lua
+
+LUA_TOP = pkg/$(LUA)
+
+LUA_INCLUDES := \
+	-I$(TOP)/pkg/$(LUA)/ \
+	-I$(TOP)/pkg/$(LUA)/src/ 
+
+OBJDIRS += pkg/$(LUA)/josmp/ \
+	pkg/$(LUA)/src/ \
+	pkg/$(LUA)/
+
+# USER_INC += $(SQLITE3_INCLUDES)
+
+LUA_CFLAGS := $(LUA_INCLUDES) -DLUA_USE_POSIX
+
+LUA_SRCFILES += \
+	$(LUA_TOP)/src/lapi.c \
+	$(LUA_TOP)/src/lapi.h \
+	$(LUA_TOP)/src/lauxlib.c \
+	$(LUA_TOP)/src/lauxlib.h \
+	$(LUA_TOP)/src/lbaselib.c \
+	$(LUA_TOP)/src/lcode.c \
+	$(LUA_TOP)/src/lcode.h \
+	$(LUA_TOP)/src/ldblib.c \
+	$(LUA_TOP)/src/ldebug.c \
+	$(LUA_TOP)/src/ldebug.h \
+	$(LUA_TOP)/src/ldo.c \
+	$(LUA_TOP)/src/ldo.h \
+	$(LUA_TOP)/src/ldump.c \
+	$(LUA_TOP)/src/lfunc.c \
+	$(LUA_TOP)/src/lfunc.h \
+	$(LUA_TOP)/src/lgc.c \
+	$(LUA_TOP)/src/lgc.h \
+	$(LUA_TOP)/src/linit.c \
+	$(LUA_TOP)/src/liolib.c \
+	$(LUA_TOP)/src/llex.c \
+	$(LUA_TOP)/src/llex.h \
+	$(LUA_TOP)/src/llimits.h \
+	$(LUA_TOP)/src/lmathlib.c \
+	$(LUA_TOP)/src/lmem.c \
+	$(LUA_TOP)/src/lmem.h \
+	$(LUA_TOP)/src/loadlib.c \
+	$(LUA_TOP)/src/lobject.c \
+	$(LUA_TOP)/src/lobject.h \
+	$(LUA_TOP)/src/lopcodes.c \
+	$(LUA_TOP)/src/lopcodes.h \
+	$(LUA_TOP)/src/loslib.c \
+	$(LUA_TOP)/src/lparser.c \
+	$(LUA_TOP)/src/lparser.h \
+	$(LUA_TOP)/src/lstate.c \
+	$(LUA_TOP)/src/lstate.h \
+	$(LUA_TOP)/src/lstring.c \
+	$(LUA_TOP)/src/lstring.h \
+	$(LUA_TOP)/src/lstrlib.c \
+	$(LUA_TOP)/src/ltable.c \
+	$(LUA_TOP)/src/ltable.h \
+	$(LUA_TOP)/src/ltablib.c \
+	$(LUA_TOP)/src/ltm.c \
+	$(LUA_TOP)/src/ltm.h \
+	$(LUA_TOP)/src/lua.c \
+	$(LUA_TOP)/src/luac.c \
+	$(LUA_TOP)/src/luaconf.h \
+	$(LUA_TOP)/src/lua.h \
+	$(LUA_TOP)/src/lualib.h \
+	$(LUA_TOP)/src/lundump.c \
+	$(LUA_TOP)/src/lundump.h \
+	$(LUA_TOP)/src/lvm.c \
+	$(LUA_TOP)/src/lvm.h \
+	$(LUA_TOP)/src/lzio.c \
+	$(LUA_TOP)/src/lzio.h \
+	$(LUA_TOP)/src/print.c
+
+LUA_OBJFILES := $(patsubst %.c, $(OBJDIR)/%.o, $(LUA_SRCFILES))
+
+$(OBJDIR)/pkg/$(LUA)/src/%.o: pkg/$(LUA)/src/%.c
+	@mkdir -p $(@D)
+	$(CC) $(USER_CFLAGS) $(CSTD) $(CFLAGS_LIB_SHARED) $(LUA_CFLAGS) -c -o $@ $<
+
+$(OBJDIR)/lib/liblua.a: $(LUA_OBJFILES)
+	@mkdir -p $(@D)
+	$(AR) r $@ $(LUA_OBJFILES)
+

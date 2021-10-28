@@ -1,0 +1,13 @@
+
+OBJDIRS += user/db_join
+
+DBJOIN_SRCFILES := db_join.c
+
+DBJOIN_OBJFILES := $(DBJOIN_SRCFILES)
+DBJOIN_OBJFILES := $(patsubst %.c, $(OBJDIR)/user/db_join/%.o, $(DBJOIN_OBJFILES))
+DBJOIN_OBJFILES := $(patsubst %.cc, $(OBJDIR)/user/db_join/%.o, $(DBJOIN_OBJFILES))
+
+$(OBJDIR)/user/db_join/%.o: PER_TARGET_CFLAGS=-I$(TOP)/user/db_join -DRD_TSC
+$(OBJDIR)/user/db_join.debuginfo: $(DBJOIN_OBJFILES) 
+$(OBJDIR)/user/db_join.debuginfo: PER_TARGET_OBJS=$(DBJOIN_OBJFILES)
+

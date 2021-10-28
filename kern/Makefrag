@@ -1,0 +1,104 @@
+# -*-Makefile-*-
+# Makefile fragment for JOS kernel.
+# This is NOT a complete makefile;
+# you must run GNU make in the top-level directory
+# where the GNUmakefile is located.
+#
+
+OBJDIRS += kern
+
+ARCHDIR	:= kern/arch/$(K_ARCH)
+include $(ARCHDIR)/Makefrag
+
+KERN_BINFILES += user/httpd.elf
+KERN_BINFILES += user/simple.elf
+KERN_BINFILES += user/test.elf
+KERN_BINFILES += user/metis.elf
+#KERN_BINFILES += user/sqlitec.elf
+#KERN_BINFILES += user/sqlite-test.elf
+
+KERN_DEFAULT  := user/simple.elf
+
+KERN_GEN := kern/kern/panic.c   \
+	    kern/kern/printf.c  \
+	    kern/kern/console.c \
+	    kern/kern/timer.c \
+	    kern/kern/pagealloc.c \
+	    kern/kern/uinit.c \
+	    kern/kern/at.c \
+	    kern/kern/atmap.c \
+	    kern/kern/segment.c \
+	    kern/kern/processor.c \
+	    kern/kern/share.c \
+	    kern/kern/kobj.c \
+	    kern/kern/id.c \
+	    kern/kern/pagetree.c \
+	    kern/kern/syscall.c \
+	    kern/kern/map.c \
+	    kern/kern/sharemap.c \
+	    kern/kern/darray.c \
+	    kern/kern/intr.c \
+	    kern/kern/console.c \
+	    kern/kern/disk.c \
+	    kern/kern/nic.c \
+	    kern/kern/device.c \
+	    kern/kern/debug.c \
+	    kern/kern/prof.c \
+	    kern/kern/sysmon.c \
+	    kern/kern/uaccess.c
+
+KERN_SRCFILES := $(KERN_ARCH) $(KERN_DEV) $(KERN_GEN) $(KERN_LIB)
+
+KERN_OBJFILES := $(addsuffix .o, $(notdir $(basename $(KERN_SRCFILES))))
+KERN_OBJFILES := $(addprefix $(OBJDIR)/kern/, $(KERN_OBJFILES))
+
+KERN_EMBEDFILES := \
+	    $(patsubst %,$(OBJDIR)/kern/embed_%.o,$(subst /,_,$(KERN_BINFILES))) \
+	    $(OBJDIR)/kern/embedbin.o obj/kern/embed_bootother.o
+
+# How to build kernel object files
+$(OBJDIR)/kern/%.o: kern/arch/$(K_ARCH)/%.S
+	@mkdir -p $(@D)
+	$(CC) $(KERN_CFLAGS) -c -o $@ $<
+$(OBJDIR)/kern/%.o: kern/arch/$(K_ARCH)/%.c
+	@mkdir -p $(@D)
+	$(CC) $(KERN_CFLAGS) $(CSTD) -c -o $@ $<
+$(OBJDIR)/kern/%.o: kern/kern/%.c
+	@mkdir -p $(@D)
+	$(CC) $(KERN_CFLAGS) $(CSTD) -c -o $@ $<
+$(OBJDIR)/kern/%.o: $(OBJDIR)/kern/%.c
+	@mkdir -p $(@D)
+	$(CC) $(KERN_CFLAGS) $(CSTD) -c -o $@ $<
+$(OBJDIR)/kern/%.o: kern/dev/%.c
+	@mkdir -p $(@D)
+	$(CC) $(KERN_CFLAGS) $(CSTD) -c -o $@ $<
+$(OBJDIR)/kern/%.o: lib/$(ARCH)/%.S
+	@mkdir -p $(@D)
+	$(CC) $(KERN_CFLAGS) -c -o $@ $<
+$(OBJDIR)/kern/%.o: lib/%.c
+	@mkdir -p $(@D)
+	$(CC) $(KERN_CFLAGS) $(CSTD) -c -o $@ $<
+
+# Dependencies for building the kernel itself
+$(OBJDIR)/kern/kernel.init.debuginfo: $(KERN_OBJFILES) $(KERN_EMBEDFILES)
+
+# How to strip kernels
+$(OBJDIR)/kern/%: $(OBJDIR)/kern/%.debuginfo
+	$(STRIP) $< -o $@
+
+# How to build the embedded bin structures
+$(OBJDIR)/kern/embedbin.c: kern/Makefrag
+	@mkdir -p $(@D)
+	echo '#include <kern/embedbin.h>' >$@
+	echo $(KERN_BINFILES) | tr ' ' '\012' | grep . | perl -pi -e 'while (m,.*/(.*),) { $$fn=$$1; chomp; s,\.,_,g; s,/,_,g; s,-,_,g; $$_ = "extern const uint8_t _binary_$${_}_start[], _binary_$${_}_size[];\n"; }' >>$@
+	echo 'struct embed_bin embed_bins[] = {' >>$@
+	echo $(KERN_DEFAULT) $(KERN_BINFILES) | tr ' ' '\012' | grep . | perl -pi -e 'while (m,.*/(.*),) { $$fn=$$1; chomp; s,\.,_,g; s,/,_,g; s,-,_,g; $$_ = "{ \"$$fn\", _binary_$${_}_start, (uintptr_t)_binary_$${_}_size },\n"; }' >>$@
+	echo "{ 0, 0, 0 } };" >>$@
+
+$(OBJDIR)/kern/embed_%.o: $(OBJDIR)/boot/%
+	@mkdir -p $(@D)
+	cd $(OBJDIR) && $(OBJCOPY) -I binary -O $(OBJTYPE) -B $(BFDARCH) `echo $< | sed -e 's,[^/]*/,,'` ../$@
+
+$(OBJDIR)/kern/embed_user_%.o: $(OBJDIR)/user/%
+	@mkdir -p $(@D)
+	cd $(OBJDIR) && $(OBJCOPY) -I binary -O $(OBJTYPE) -B $(BFDARCH) `echo $< | sed -e 's,[^/]*/,,'` ../$@

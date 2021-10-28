@@ -1,0 +1,66 @@
+diff -Naur qemu-0.9.1/target-i386/helper.c qemu-0.9.1.sbw/target-i386/helper.c
+--- qemu-0.9.1/target-i386/helper.c	2008-01-06 14:38:45.000000000 -0500
++++ qemu-0.9.1.sbw/target-i386/helper.c	2008-04-06 06:39:35.000000000 -0400
+@@ -1670,6 +1670,28 @@
+     CC_SRC = eflags;
+ }
+ 
++#ifdef TARGET_X86_64
++void helper_cmpxchg16b(void)
++{
++    uint64_t d0, d1;
++    int eflags;
++
++    eflags = cc_table[CC_OP].compute_all();
++    d0 = ldq(A0);
++    d1 = ldq(A0 + 8);
++    if (d0 == EAX && d1 == EDX) {
++	stq(A0, EBX);
++	stq(A0 + 8, ECX);
++        eflags |= CC_Z;
++    } else {
++        EDX = d1;
++        EAX = d0;
++        eflags &= ~CC_Z;
++    }
++    CC_SRC = eflags;
++}
++#endif
++
+ void helper_single_step()
+ {
+     env->dr[6] |= 0x4000;
+diff -Naur qemu-0.9.1/target-i386/op.c qemu-0.9.1.sbw/target-i386/op.c
+--- qemu-0.9.1/target-i386/op.c	2008-01-06 14:38:45.000000000 -0500
++++ qemu-0.9.1.sbw/target-i386/op.c	2008-04-06 06:39:35.000000000 -0400
+@@ -730,6 +730,13 @@
+     helper_cmpxchg8b();
+ }
+ 
++#ifdef TARGET_X86_64
++void OPPROTO op_cmpxchg16b(void)
++{
++    helper_cmpxchg16b();
++}
++#endif
++
+ void OPPROTO op_single_step(void)
+ {
+     helper_single_step();
+diff -Naur qemu-0.9.1/target-i386/translate.c qemu-0.9.1.sbw/target-i386/translate.c
+--- qemu-0.9.1/target-i386/translate.c	2008-01-06 14:38:45.000000000 -0500
++++ qemu-0.9.1.sbw/target-i386/translate.c	2008-04-06 06:39:35.000000000 -0400
+@@ -3893,7 +3893,12 @@
+         if (s->cc_op != CC_OP_DYNAMIC)
+             gen_op_set_cc_op(s->cc_op);
+         gen_lea_modrm(s, modrm, &reg_addr, &offset_addr);
+-        gen_op_cmpxchg8b();
++#ifdef TARGET_X86_64
++	if (x86_64_hregs)
++	    gen_op_cmpxchg16b();
++	else
++#endif
++	    gen_op_cmpxchg8b();
+         s->cc_op = CC_OP_EFLAGS;
+         break;
+ 

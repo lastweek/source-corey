@@ -1,0 +1,14 @@
+OBJDIRS += user/sqlitec
+
+SQLITEC_SRCFILES :=    \
+	sqlitec.cc
+
+SQLITEC_OBJFILES := $(SQLITEC_SRCFILES)
+SQLITEC_OBJFILES := $(patsubst %.c, $(OBJDIR)/user/sqlitec/%.o, $(SQLITEC_OBJFILES))
+SQLITEC_OBJFILES := $(patsubst %.cc, $(OBJDIR)/user/sqlitec/%.o, $(SQLITEC_OBJFILES))
+
+
+$(OBJDIR)/user/sqlitec/%.o: PER_TARGET_CFLAGS=-I$(TOP)/user/sqlitec
+$(OBJDIR)/user/sqlitec.debuginfo: $(SQLITEC_OBJFILES)
+$(OBJDIR)/user/sqlitec.debuginfo: PER_TARGET_OBJS=$(SQLITEC_OBJFILES)
+

@@ -1,0 +1,10 @@
+OBJDIRS += user/metis
+
+METIS_SRCFILES :=  user/metis/wordrevidx.c
+
+METIS_OBJFILES += $(patsubst user/metis/%.c, $(OBJDIR)/user/metis/%.o, $(METIS_SRCFILES))
+
+$(OBJDIR)/user/metis/%.o: PER_TARGET_CFLAGS=-I$(OBJDIR)/user/metis
+$(OBJDIR)/user/metis.debuginfo: $(METIS_OBJFILES) $(OBJDIR)/lib/libstreamflow.a $(OBJDIR)/lib/libmetis.a	
+	$(CC) -o $@ $(METIS_OBJFILES) -lstreamflow -lmetis $(LDFLAGS)
+$(OBJDIR)/user/metis.debuginfo: PER_TARGET_OBJS=$(METIS_OBJFILES)

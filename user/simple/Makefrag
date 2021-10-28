@@ -1,0 +1,11 @@
+OBJDIRS += user/simple
+
+SIMPLE_SRCFILES :=	\
+	user/simple/main.c
+
+SIMPLE_OBJFILES := $(SIMPLE_SRCFILES)
+SIMPLE_OBJFILES := $(patsubst user/simple/%.c, $(OBJDIR)/user/simple/%.o, $(SIMPLE_SRCFILES))
+
+$(OBJDIR)/user/simple/%.o: PER_TARGET_CFLAGS=-I$(TOP)/user/simple
+$(OBJDIR)/user/simple.debuginfo: $(SIMPLE_OBJFILES)
+$(OBJDIR)/user/simple.debuginfo: PER_TARGET_OBJS=$(SIMPLE_OBJFILES)

@@ -1,0 +1,49 @@
+OBJDIRS += user/test
+
+TEST_SRCFILES :=    \
+	main.c      \
+    	as.c        \
+    	segment.c   \
+    	processor.c \
+    	thread.c    \
+	share.c	    \
+	kdebug.c    \
+	fs.c	    \
+	disk.cc	    \
+	cons.cc	    \
+	pfork.c	    \
+	cache.c	    \
+	lwip.c	    \
+	string.c    \
+	fp.c	    \
+	memclone.cc \
+	memcloneat.cc \
+	bcache.c    \
+	cpp.cc	    \
+	monitor.cc  \
+	lock.c	    \
+	interior.c  \
+	efsl.c	    \
+	pf.c	    \
+	net.cc	    \
+	fd.cc	    \
+	potato2.c   \
+	reinit.c    \
+	elf.c	    \
+	fs_fd_perf.cc	\
+	sock_fd_perf.cc \
+	rawsock_fd_perf.cc \
+	mempass.c \
+	sysprof.c \
+	malloc.c \
+	memcpy.c
+
+TEST_OBJFILES := $(TEST_SRCFILES)
+TEST_OBJFILES := $(patsubst %.c, $(OBJDIR)/user/test/%.o, $(TEST_OBJFILES))
+TEST_OBJFILES := $(patsubst %.cc, $(OBJDIR)/user/test/%.o, $(TEST_OBJFILES))
+
+## make sure to build string.c without optimizations
+$(OBJDIR)/user/test/string.o: PER_TARGET_CFLAGS=-I$(TOP)/user/test -O0
+$(OBJDIR)/user/test/%.o: PER_TARGET_CFLAGS=-I$(TOP)/user/test
+$(OBJDIR)/user/test.debuginfo: $(TEST_OBJFILES)
+$(OBJDIR)/user/test.debuginfo: PER_TARGET_OBJS=$(TEST_OBJFILES)

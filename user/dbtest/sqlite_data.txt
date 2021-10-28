@@ -1,0 +1,60 @@
+
+EXPERIMENTS:
+dyn-sel-range:
+	repeat 1000 times (???),
+	choose rand1 and rand2 for each query, from a 32-bit space, using an LCG PRNG.
+	select count(*), avg(b) from tX where tX.b <= rand1 and tX.b >= rand2
+static-sel-count(*):
+	select count(*) from tX
+static-sel-range:
+	select count(*), avg(b) from tX where tX.b <= const1 and tX.b >= const2
+	??? what are constants const1 and const2
+static-sel-range-sp:
+	just like static-sel-range, but uses sprintf to generate each queries.
+	this was used to test if the dynamic generation of queries using sprintf()
+	has any impact on performance (over using a string generated before runtime).
+
+In each experiment, the tables have two INTEGER columns and 32K rows. 
+A SQLite integer has 8-bytes, so the total size of each table 
+is 32*(8*2)KB=512KB.
+
+In the following experiments, spatial locality has 4 query threads,
+(no dispatcher thread), and one table private to each query thread, 
+dumb spatial has no dispatcher and 4 query threads all sharing the 
+same 3 tables.
+
+					spatial locality (s)			dumb spatial (s)
+dyn-sel-range		13.186							13
+static-sel-count(*)	2.348(2.314 w/o rand)			2.37
+static-sel-range	11.715(11.43 w/o rand)			11.53
+static-sel-range-sp	11.562							11.57
+
+dumb spatial
+total time				13.00s
+sqlite3_prepare time	 1.61s
+
+dyn-sel-range
+	4K rows
+		dumb spatial			1.706s
+		dumb spatial no close	1.71s
+		locality				1.71s	
+		locality no close		1.67s
+		locality own table		1.70s	
+
+4K rows
+single-prepare
+	dumb spatial	1.464s
+	locality		1.546s
+
+
+
+CONCERNS about these experiments?
+- why are the results the same ?!!
+
+Plans for future experiments:
+1. SQLite PREPARE vs. EXEC time, using the dynamic range SELECT.  V
+2. make sure "dumb spatial" uses different B trees for different dbs/tables. V
+3. how is the system interacting with RamFS? trace ramfs_read, ramfs_write and count the number of reads/writes and bytes read/written.
+4. Run experiments using tables sizes of 4K rows (to compare with the 32K row results above). V
+5. Make sure that SQLite is returning correct results. Evaluate using the SELECT avg(*) range query. V
+

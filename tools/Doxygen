@@ -1,0 +1,157 @@
+// vim:et:sw=2:ts=2:ft=c
+
+//
+// mp
+//
+
+  /**
+   * \fn static struct mp_fptr * mp_search1(physaddr_t pa, int len)
+   *
+   * \brief Search the given addresses for the MPS floating pointer structure
+   * by its signature, "_MP_".
+   *
+   * \param pa The physical address where we start searching.
+   *
+   * \param len The number of bytes to scan starting from \a pa.
+   */
+
+//
+// pmap
+//
+
+  /**
+   * \fn int pgdir_walk(struct Pagemap * pgmap, const void * va, int create, ptent_t * * pte_store)
+   *
+   * \brief Finds the PTE for the given VA in a Pagemap.
+   *
+   * \param[in] pgmap The Pagemap to search.
+   *
+   * \param[in] va I will get the PTE for the page containing this virtual
+   * address.  This need not be page-aligned.
+   *
+   * \param[in] create Whether the PTE should be created. TODO PTEs need to be
+   * created? isn't there just a fixed-size array of PTEs?
+   *
+   * \param[out] pte_store I'll point this at the PTE if found.
+   */
+
+//
+// acpi
+//
+
+  /**
+   * \fn int acpi_node_by_addr(uintptr_t p)
+   *
+   * \brief Finds the memory node to which a physical address belongs.
+   *
+   * \return The index of the memory node containing this physical address, or
+   * -1 if not found.
+   */
+
+  /**
+   * \fn int acpi_node_by_cpu(proc_id_t p)
+   *
+   * \brief Finds the memory node to which a CPU belongs.
+   *
+   * \return The index of the memory node containing this CPU, or -1 if not
+   * found.
+   */
+
+//
+// User library
+//
+
+  /**
+   * \fn int as_map(uint64_t sg, uint64_t start_byteoff, uint64_t flags, void * * va_p, uint64_t * bytes_store)
+   *
+   * \brief Adds a USM to the current UAS that maps the segment onto the given
+   * VA, with kslot the lowest available slot.
+   *
+   * \param[in] sg KOID of the segment to be mapped.
+   *
+   * \param[in] start_byteoff The byte offset of the page to be mapped. This must
+   * be page-aligned.
+   *
+   * \param[in] flags Some flags, for instance READ and WRITE (TODO correct).
+   *
+   * \param[out] va_p A pointer (VA) that we want to map the page to. If this is
+   * NULL, then
+   *
+   * \param[in] bytes_store The number of bytes to map. If this is NULL and not 0,
+   * then we map the entire segment. This does not need to be page-aligned, but
+   * the minimum whole number of pages will be mapped.
+   */
+
+  /**
+   * \fn int64_t pfork(proc_id_t pid)
+   *
+   * \brief Akin to Unix fork; copies the current Processor and AS, and vectors
+   * the Processor onto another CPU.
+   *
+   * Note that in our exokernel, Processors do not have implicit time-sharing
+   * (this is something which must be explicitly implemented using a revocation
+   * protocol; see the Exokernel paper for more details). Hence, pfork vectors
+   * the new Processor onto another CPU, requiring there to be more than one
+   * CPU for the other Processor to automatically start running. There are 16
+   * Processors available in the system.
+   *
+   * - Copy the current UAS.
+   * - Allocate a new Processor and AS labeled "fork-processor" and "fork-as"
+   *   (referencing the latter from the former).
+   * - Duplicate the segment as "worker-seg".
+   * - COW each segment in the current AS into the new UAS (referencing the
+   *   latter from the new Processor).
+   * - Set "fork-as" to be the new UAS.
+   * - Vector the new Processor with a context that is crafted to resume
+   *   "here".
+   * - Dereference all the new KOs from the current Processor, except for the
+   *   new Processor since we don't want it to be GCed (unless something went
+   *   awry).
+   *
+   * \param[in] pid The PID of the new Processor. This is not a KOID but is a
+   * user context ID.
+   *
+   * \return In the parent: the KOID of the new Processor, or an error code. In
+   * the child: 0.
+   */
+
+//
+// System calls
+//
+
+  /**
+   * \fn int64_t sys_processor_get_as(uint64_t ps_id)
+   *
+   * \brief Gets the KOID of the given Processor's AS.
+   *
+   * \param[in] ps_id The KOID of the Processor.
+   *
+   * \return The KOID of the AS, or an error code.
+   */
+
+  /**
+   * \fn int sys_as_get(uint64_t as_id, struct u_address_space * uas)
+   *
+   * \brief Gets the u_address_space of the AS with the given KOID.
+   *
+   * \param[in] as_id The KOID of the AS.
+   *
+   * \param[out] uas I write the UAS here.
+   *
+   * \return 0 or an error code.
+   */
+
+  /**
+   * \fn int64_t sys_segment_copy(uint64_t sg_id, const char * name, uint64_t flags)
+   *
+   * \brief Creates a new segment that is a duplicate of an existing segment.
+   *
+   * \param[in] sg_id The KOID of the existing segment to duplicate.
+   *
+   * \param[in] name The KO name of the new segment.
+   *
+   * \param[in] flags The same flags for segment_copy(). 0 for eager copy,
+   * COPY_ON_READ, or COPY_ON_WRITE.
+   *
+   * \return The KOID of the newly created duplicate segment, or an error code.
+   */

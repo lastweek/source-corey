@@ -1,0 +1,83 @@
+The native 64-bit toolchains on 64-bit OSs should build josmp.
+
+* binutils
+
+Download binutils 2.17 from http://www.kernel.org/pub/linux/devel/binutils/
+
+./configure --target=x86_64-jos-linux --prefix=/usr/local \
+        --disable-nls --enable-64-bit-bfd
+
+
+* GCC 4.1.2
+
+Unpack gcc-core-4.1.2 and gcc-g++-4.1.2.
+rm -r gcc-4.1.2/libstdc++-v3
+
+./configure --target=x86_64-jos-linux --prefix=/usr/local \
+	--disable-nls --without-headers --with-newlib \
+	--disable-threads --disable-shared --disable-libmudflap \
+	--disable-libssp 
+
+Note that for some versions of gcc, you may need to say "env
+SHELL=/bin/sh gmake" if you have a different shell.
+
+Also, note that some binaries won't compile (on OSX), but these you
+shouldn't need.
+
+* GDB
+
+./configure --target=x86_64-jos-linux --prefix=/usr/local \
+        --disable-nls --enable-64-bit-bfd
+
+* To configure Bochs, you need --enable-x86-64:
+
+./configure \
+        --enable-4meg-pages \
+        --enable-all-optimizations \
+        --enable-disasm \
+        --enable-debugger \
+        --enable-global-pages \
+        --enable-iodebug \
+        --enable-ne2000 \
+        --enable-pae \
+        --enable-pci \
+        --enable-pnic \
+        --enable-smp \
+        --enable-x86-64 \
+        --enable-x86-debugger \
+        --with-nogui
+
+On bochs 2.2, --enable-instrumentation doesn't compile, but CVS
+versions work.  Unfortunately, bochs doesn't seem to emulate AMD64
+very faithfully.  For example, the OpenBSD 3.7 floppy won't boot.
+
+With bochs 2.3.6 had to fix a number of small compilation problems (on
+OSX), and dropped --with-nogui, but then it worked.  Make sure that if
+you installed an old version of bochs, that you are using the romimage
+that comes along with 2.3.6 and that your .bochsrc points to it (bochs
+installs now in /usr/local/share/bochs by default instead of
+/usr/local).  (If you use an old version, JOSMP wil bail out during
+mp_init, and not found other CPUs.)
+
+* Qemu
+
+For qemu 0.9.1, you must apply ./conf/qemu-cmpxchg16b.patch to avoid
+incorrectly interpreting cmpxchg16b as cmpxchg8b.
+
+josmp has not been tested with earlier versions of qemu, some of which
+have known bugs.
+
+qemu-system-x86_64 (version 0.9.1) on 32-bit Mac, segfaults before the
+kernel is loaded.
+
+./configure --disable-kqemu --disable-sdl --disable-gfx-check \
+	--cc=gcc34 --host-cc=gcc34 \
+	--target-list='x86_64-softmmu'
+
+* To boot josmp for the first time:
+
+    % gmake
+    % cp conf/sample-qemu.sh qemu.sh
+    % ./qemu.sh
+
+* To change the bootstrap application set KERN_DEFAULT in kern/Makerag

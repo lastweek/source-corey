@@ -1,0 +1,16 @@
+brick-1.csail.mit.edu
+brick-2.csail.mit.edu
+brick-3.csail.mit.edu
+brick-4.csail.mit.edu
+brick-5.lcs.mit.edu
+brick-6.lcs.mit.edu
+brick-7.lcs.mit.edu
+brick-8.lcs.mit.edu
+brick-9.lcs.mit.edu
+brick-10.lcs.mit.edu
+brick-11.lcs.mit.edu
+brick-12.lcs.mit.edu
+brick-14.lcs.mit.edu
+oc-1.lcs.mit.edu
+oc-2.lcs.mit.edu
+oc-3.lcs.mit.edu

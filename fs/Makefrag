@@ -1,0 +1,30 @@
+OBJDIRS += fs
+
+FS_SRCFILES := \
+	fs/namei.cc \
+	fs/ramfs.c \
+	fs/dbfs.c \
+	fs/vfs0.c \
+	fs/vfs0cache.c \
+	fs/mount.c \
+	fs/fs.c \
+	fs/datatree.c
+
+FS_OBJFILES := $(FS_SRCFILES)
+FS_OBJFILES := $(patsubst fs/%.c, $(OBJDIR)/fs/%.o, $(FS_OBJFILES))
+FS_OBJFILES := $(patsubst fs/%.cc, $(OBJDIR)/fs/%.o, $(FS_OBJFILES))
+
+FS_CFLAGS	= $(USER_CFLAGS) $(UCLIBC_COMFLAGS)
+FS_CXXFLAGS	= $(USER_CXXFLAGS) $(UCLIBC_COMFLAGS)
+
+$(OBJDIR)/fs/%.o: fs/%.c
+	@mkdir -p $(@D)
+	$(CC) $(FS_CFLAGS) $(CSTD) -D_GNU_SOURCE -Werror -c -o $@ $<
+
+$(OBJDIR)/fs/%.o: fs/%.cc
+	@mkdir -p $(@D)
+	$(CXX) $(FS_CXXFLAGS) -Werror -c -o $@ $<
+
+$(OBJDIR)/lib/libfs.a: $(FS_OBJFILES)
+	rm -f $@
+	$(AR) r $@ $(FS_OBJFILES)

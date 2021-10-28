@@ -1,0 +1,56 @@
+# -*-Makefile-*-
+
+KERN_LDFLAGS = -N -e start -nostdlib
+KERN_CFLAGS += -msoft-float -mno-red-zone -mcmodel=kernel -fno-builtin
+
+KERN_ARCH :=					\
+	$(ARCHDIR)/multiboot.S			\
+	$(ARCHDIR)/bootdata.S			\
+	$(ARCHDIR)/init.c			\
+	$(ARCHDIR)/locore.S			\
+	$(ARCHDIR)/reboot.c			\
+	$(ARCHDIR)/trap.c			\
+	$(ARCHDIR)/mp.c				\
+	$(ARCHDIR)/mtrr.c			\
+	$(ARCHDIR)/misc.c			\
+	$(ARCHDIR)/pmap.c			\
+	$(ARCHDIR)/page.c			\
+	$(ARCHDIR)/numa.c			\
+	$(ARCHDIR)/perfmon.c			\
+	$(ARCHDIR)/irq.c
+
+KERN_LIB :=					\
+	lib/$(ARCH)/strlen.S			\
+	lib/$(ARCH)/stack.S			\
+	lib/$(ARCH)/memcpy.S			\
+	lib/$(ARCH)/memset.S			\
+	lib/$(ARCH)/pagezero.S			\
+	lib/$(ARCH)/longjmp.S			\
+	lib/memcmp.c				\
+	lib/memmove.c				\
+	lib/printfmt.c				\
+	lib/sysstring.c				\
+	lib/string.c				\
+	lib/hashtable.c
+
+KERN_DEV :=					\
+	kern/dev/cgacons.c			\
+	kern/dev/lptcons.c			\
+	kern/dev/sercons.c			\
+	kern/dev/lapic.c			\
+	kern/dev/kclock.c			\
+	kern/dev/picirq.c			\
+	kern/dev/acpi.c				\
+	kern/dev/ioapic.c			\
+	kern/dev/pci.c				\
+	kern/dev/ide.c				\
+	kern/dev/pnic.c				\
+	kern/dev/ne2kpci.c			\
+	kern/dev/e1000.c			\
+	kern/dev/vnic.c				\
+	kern/dev/bge.c
+
+$(OBJDIR)/kern/kernel.%.debuginfo: kern/arch/amd64/kernel.ld
+	$(LD) -o $@ $(KERN_LDFLAGS) $^ $(GCC_LIB) -T kern/arch/amd64/kernel.ld
+
+all: $(OBJDIR)/boot/bochs.img $(OBJDIR)/fs/fs.fat $(OBJDIR)/boot/bimage.init

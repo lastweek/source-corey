@@ -1,0 +1,39 @@
+OBJDIRS += pkg/efsl/src
+OBJDIRS += pkg/efsl/src/interfaces
+
+USER_INC += -Ipkg/efsl/conf
+
+EFSL_CFLAGS := -Ipkg/efsl/inc -Ipkg/efsl/conf $(USER_COMFLAGS)
+
+EFSL_SRCFILES :=		\
+	interfaces/josmpif.c	\
+	efs.c			\
+	plibc.c			\
+	disc.c			\
+	partition.c		\
+	fs.c			\
+	fat.c			\
+	time.c			\
+	file.c			\
+	dir.c			\
+	mkfs.c			\
+	debug.c			\
+	ioman.c			\
+	ui.c			\
+	ls.c			\
+	extract.c
+
+EFSL_OBJFILES := $(patsubst %.c, $(OBJDIR)/pkg/efsl/src/%.o, $(EFSL_SRCFILES))
+
+$(OBJDIR)/pkg/efsl/%.o: pkg/efsl/%.c
+	@mkdir -p $(@D)
+	$(CC) $(EFSL_CFLAGS) $(CSTD) -Werror -c -o $@ $< $(PER_TARGET_CFLAGS)
+
+$(OBJDIR)/efsl:
+	@mkdir -p $(@D)
+	ln -s $(TOP)/pkg/efsl/inc $@
+
+$(OBJDIR)/lib/libefsl.a: $(EFSL_OBJFILES)
+	@mkdir -p $(@D)
+	rm -f $@
+	$(AR) r $@ $(EFSL_OBJFILES)

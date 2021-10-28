@@ -1,0 +1,22 @@
+
+OBJDIRS += user/httpd
+
+HTTPD_SRCFILES :=    \
+	main.cc	     \
+	jhttpd.cc    \
+	lwiptest.c   \
+	filesum.cc   \
+	db_select.cc \
+	db_join.cc   \
+	test.cc
+
+USER_CFLAGS += -DPRIVATE_HEAP
+
+HTTPD_OBJFILES := $(HTTPD_SRCFILES)
+HTTPD_OBJFILES := $(patsubst %.c, $(OBJDIR)/user/httpd/%.o, $(HTTPD_OBJFILES))
+HTTPD_OBJFILES := $(patsubst %.cc, $(OBJDIR)/user/httpd/%.o, $(HTTPD_OBJFILES))
+
+$(OBJDIR)/user/httpd/%.o: PER_TARGET_CFLAGS=-I$(TOP)/user/httpd
+$(OBJDIR)/user/httpd.debuginfo: $(HTTPD_OBJFILES)
+$(OBJDIR)/user/httpd.debuginfo: PER_TARGET_OBJS=$(HTTPD_OBJFILES)
+

@@ -1,0 +1,49 @@
+# How do we figure out the meta information for an object? 
+# Options:
+#	- HEADERS
+#	- BIBOP
+#	- RADIX_TREE
+META_METHOD	= RADIX_TREE
+
+# What architecture are we on?
+# Options:
+# 	- ppc64 (IBM PowerPC, 64-bit)
+#	- x86 (Intel x86, 32-bit)
+#	- ia64 (Intel Itanium, 64-bit)	
+#	- x86_64 (Intel/AMD 64-bit)
+ASM		= x86_64
+
+ifeq ($(ASM), ppc64)
+	BITS = -m64
+	FPIC = -fPIC
+endif
+ifeq ($(ASM), x86)
+	BITS = -m32
+endif
+ifeq ($(ASM), ia64)
+	FPIC = -fPIC
+endif
+ifeq ($(ASM), x86_64)
+	BITS = -m64
+	FPIC= -fPIC
+endif
+
+OBJDIRS += pkg/streamflow
+
+LIBSTREAMFLOW_CSRC = streamflow.c
+
+LIBSTREAMFLOW_SRCFILES += $(patsubst %.c, pkg/streamflow/%.c, $(LIBSTREAMFLOW_CSRC))
+
+LIBSTREAMFLOW_OBJFILES := $(patsubst %.c,  $(OBJDIR)/%.o, $(LIBSTREAMFLOW_SRCFILES))
+
+LIBSTREAMFLOW_GCCFLAGS = $(USER_CFLAGS) $(CFLAGS_LIB_SHARED) -D$(ASM) -D$(META_METHOD) -Ipkg/streamflow/include-$(ASM) -Wall $(BITS) -fno-strict-aliasing $(FPIC) -O3 -ggdb -DNUMA
+
+$(OBJDIR)/pkg/streamflow/%.o: pkg/streamflow/%.c
+	@mkdir -p $(@D)
+	$(CC) $(LIBSTREAMFLOW_GCCFLAGS) -c -o $@ $<
+
+$(OBJDIR)/lib/libstreamflow.a: $(LIBSTREAMFLOW_OBJFILES)
+	@mkdir -p $(@D)
+	rm -f $@
+	$(AR) r $@ $(LIBSTREAMFLOW_OBJFILES)
+

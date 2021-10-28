@@ -1,0 +1,5 @@
+1.Fix bugs in realloc.Search for Yandong Mao in realloc to see the details
+2.Rename thread_id to local_thread_id since thread_id is the API provided by libjos.a
+3.Simulate ceil and log2 with interger operations in x86_64\sim_math.h since float point is not supported yet.
+4.Simulate __thread (tls variable) with an array in x86_64\sim_tls.h since tls is not supported yet.
+

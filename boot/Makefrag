@@ -1,0 +1,113 @@
+# -*-Makefile-*-
+#
+# bimage
+# 
+# 0 ---------> +-----------------------------+ <--------+
+#              |                             |          |
+#              | jos64 boot loader and init  |          |
+#              |                             |          |
+# 497 -------> +-----------------------------+          | bbootsect
+#              |                             |          |
+#              |    linux header part 1      |          |
+#              |                             |          |
+# 512 -------> +-----------------------------+ <--------+
+#              |                             |          |
+#              |    linux header part 2      |          |
+#              |                             |          |
+#              +-----------------------------+          | bsetup
+#              |                             |          |
+#              |         jos64 init          |          |
+#              |                             |          |
+# ELFOFF ----> +-----------------------------+ <--------+
+#              |                             |
+#              |       jos64 kernel ELF      |
+#              |                             |
+#              +-----------------------------+
+#
+# The jos64 boot loader allows a bimage to be used as a part of a bootable 
+# disk image, which is useful for booting on qemu or Bochs.  However, a
+# bimage disk image will not support a partition table, which usually 
+# starts at 446.  A bimage can also be used with most Linux compatible 
+# boot loaders to boot on real hardware.
+#
+
+# Must be a multiple of 512 and fit bbootsect and bsetup
+ELFOFF := 4096
+
+OBJDIRS += boot
+
+BBS_OBJS := $(OBJDIR)/boot/boot.o $(OBJDIR)/boot/diskboot.o \
+	    $(OBJDIR)/boot/bsdata.o
+SETUP_OBJS := $(OBJDIR)/boot/setup.o $(OBJDIR)/boot/csetup.o
+BOOT_CFLAGS := -m32 -DCODE32 -g -Os -MD -Wall -Werror -DJOS_KARCH_$(K_ARCH) \
+	       -DELFOFF=$(ELFOFF)
+
+$(OBJDIR)/boot/%.o: boot/%.S boot/Makefrag
+	@mkdir -p $(@D)
+	$(CC) $(BOOT_CFLAGS) $(INCLUDES) -c -o $@ $<
+
+$(OBJDIR)/boot/%.o: boot/%.c boot/Makefrag
+	$(CC) $(BOOT_CFLAGS) $(INCLUDES) $(CSTD) -c -o $@ $<
+
+$(OBJDIR)/boot/bbootsect: $(BBS_OBJS)
+	$(LD) -melf_i386 -N -e start -o $@.out -Ttext 0x7C00 $(BBS_OBJS) \
+	      -Tdata 0x7DF0
+	$(OBJCOPY) -S -O binary $@.out $@	
+	perl boot/pad.pl $@ 512
+
+# For Linux setup code, link at 0x0, but load address is irrelevant
+$(OBJDIR)/boot/bsetup: $(SETUP_OBJS)
+	$(LD) -melf_i386 -N -e start -o $@.out -Ttext 0x0 $^
+	$(OBJCOPY) -S -O binary $@.out $@
+	perl boot/pad.pl $@ $(shell echo $$(($(ELFOFF) - 512)))
+
+$(OBJDIR)/boot/bimage.%: $(OBJDIR)/boot/bbootsect $(OBJDIR)/boot/bsetup \
+			 $(OBJDIR)/kern/kernel.%
+	cat $^ > $@
+
+# Build the bootstrap code for mp systems
+$(OBJDIR)/boot/bootother: $(OBJDIR)/boot/bootother.o
+	$(LD) -melf_i386 -N -e start -Ttext 0x7000 -o $(OBJDIR)/boot/bootother.out $<
+	$(OBJCOPY) -S -O binary $(OBJDIR)/boot/bootother.out $@
+
+# Build the Bochs/QEMU disk image
+$(OBJDIR)/boot/bochs.img: $(OBJDIR)/boot/bimage.init
+	dd if=/dev/zero of=$@~ count=10000 2>/dev/null
+	dd if=$< of=$@~ conv=notrunc 2>/dev/null
+	mv $@~ $@
+
+# Build the Bochs/QEMU disk image for vmm
+$(OBJDIR)/boot/vmm.img: $(OBJDIR)/boot/bimage.vmm
+	dd if=/dev/zero of=$@~ count=10000 2>/dev/null
+	dd if=$< of=$@~ conv=notrunc 2>/dev/null
+	mv $@~ $@
+
+# Build a blank disk with a partition table
+$(OBJDIR)/fs/fs.img:
+	@mkdir -p $(@D)
+	dd if=/dev/zero of=$@~ bs=1024k count=64 2>/dev/null
+	perl boot/partinit.pl $@~
+	mv $@~ $@
+
+# Build a FAT fs
+$(OBJDIR)/fs/fs.fat:
+	@mkdir -p $(@D)
+	dd if=/dev/zero of=$@~ count=100000 2>/dev/null
+	@for i in /sbin/mkdosfs /usr/sbin/mkdosfs end; do \
+		if [ -f $$i ] ; then $$i $@~; break; fi; \
+		if [ $$i = end ] ; then \
+			echo -e "\nwarning: Unable to build FAT fs!\n" ; fi ; \
+	done
+	mv $@~ $@
+
+# Build a bootable iso
+$(OBJDIR)/boot/boot.iso: IMAGE_CMDLINE = default histar
+$(OBJDIR)/boot/boot.iso: $(OBJDIR)/boot/bimage.init
+	-rm -rf $(@D)/isoimage
+	@mkdir -p $(@D)/isoimage
+	cp boot/isolinux.bin $(@D)/isoimage/isolinux.bin
+	cp $(OBJDIR)/boot/bimage.init $(@D)/isoimage/histar
+	echo '$(IMAGE_CMDLINE)' > $(@D)/isoimage/isolinux.cfg
+	mkisofs -J -r -o $@ -b isolinux.bin -c boot.cat \
+		-no-emul-boot -boot-load-size 4 -boot-info-table \
+		$(@D)/isoimage

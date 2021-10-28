@@ -1,0 +1,100 @@
+OBJDIRS += test
+
+.PRECIOUS: $(OBJDIR)/test/%.o
+
+TEST_USER_CFLAGS := \
+	-g -DJOS_USER -DJOS_TEST -I$(TOP) -I$(TOP)/obj
+
+TEST_LIB_CFLAGS  := \
+	-O3 -std=c99 -D_GNU_SOURCE -fms-extensions \
+	-I/home/sbw/benchos-all/coretime/pkg/perfctr/linux/include \
+	-I/home/sbw/benchos-all/coretime/pkg/perfctr/usr.lib -Wall
+
+MRRTM_TEST_SRC := mapreduce.cc mr-linux.cc
+MRRTM_TEST_OBJS := $(patsubst %.cc, obj/test/%.o, $(MRRTM_TEST_SRC))
+MRRTM_TEST_INC := -I$(TOP)/user/mr-rtm -I$(TOP)/kern
+
+HTTPC_TEST_SRC := httpc.cc
+HTTPC_TEST_OBJS := $(patsubst %.cc, obj/test/%.o, $(HTTPC_TEST_SRC))
+
+WRAPPER_CLIENT_SRC := wrapper_client.cc
+WRAPPER_CLIENT_OBJS := $(patsubst %.cc, obj/test/%.o, $(WRAPPER_CLIENT_SRC))
+
+SYNC_SERVER_TEST_SRC := sync_server.cc
+SYNC_SERVER_TEST_OBJS := $(patsubst %.cc, obj/test/%.o, $(SYNC_SERVER_TEST_SRC))
+
+NET_TEST_SRC := net.cc error.cc sysstring.c pmc.c
+NET_TEST_OBJS := $(patsubst %.c, obj/test/%.o, $(NET_TEST_SRC))
+NET_TEST_OBJS := $(patsubst %.cc, obj/test/%.o, $(NET_TEST_OBJS))
+
+MALLOC_TEST_SRC := malloc.c
+MALLOC_TEST_OBJS := $(patsubst %.c, obj/test/%.o, $(MALLOC_TEST_SRC))
+
+NET_TEST_LDFLAGS := \
+	-L/home/sbw/benchos-all/coretime/obj/lib -lstdc++ -lpthread -lperfctr
+
+PGEN_TEST_SRC := pgen.c
+PGEN_TEST_OBJS := $(patsubst %.c, obj/test/%.o, $(PGEN_TEST_SRC))
+
+MEMCPY_TEST_SRC := memcpy.c
+MEMCPY_TEST_OBJS := $(patsubst %.c, obj/test/%.o, $(MEMCPY_TEST_SRC))
+
+$(OBJDIR)/test/%.o: test/%.c
+	@mkdir -p $(@D)
+	$(NCC) $(TEST_LIB_CFLAGS) -c -o $@ $<
+
+$(OBJDIR)/test/%.o: user/mr-rtm/%.cc
+	@mkdir -p $(@D)
+	$(NCC) $(TEST_USER_CFLAGS) $(MRRTM_TEST_INC) -c -o $@ $<
+
+$(OBJDIR)/test/%.o: test/%.cc
+	@mkdir -p $(@D)
+	$(NCC) $(TEST_USER_CFLAGS) $(MRRTM_TEST_INC) -c -o $@ $<
+
+$(OBJDIR)/test/%.o: user/test/%.cc
+	@mkdir -p $(@D)
+	$(NCXX) $(TEST_USER_CFLAGS) -c -o $@ $<
+
+$(OBJDIR)/test/%.o: user/test/%.c
+	@mkdir -p $(@D)
+	$(NCC) $(TEST_USER_CFLAGS) -std=gnu99 -D_GNU_SOURCE -c -o $@ $<
+
+$(OBJDIR)/test/%.o: lib/%.cc
+	@mkdir -p $(@D)
+	$(NCXX) $(TEST_USER_CFLAGS) -c -o $@ $<
+
+$(OBJDIR)/test/%.o: lib/%.c
+	@mkdir -p $(@D)
+	$(NCC) $(TEST_USER_CFLAGS) -c -o $@ $<
+
+$(OBJDIR)/test/mr-rtm: $(MRRTM_TEST_OBJS)
+	@mkdir -p $(@D)
+	$(NCC) -o $@ $(MRRTM_TEST_OBJS) -lstdc++ -lpthread
+
+$(OBJDIR)/test/httpc: $(HTTPC_TEST_OBJS)
+	@mkdir -p $(@D)
+	$(NCC) -o $@ $(HTTPC_TEST_OBJS) -lstdc++ -lpthread
+
+$(OBJDIR)/test/pgen: $(PGEN_TEST_OBJS)
+	@mkdir -p $(@D)
+	$(NCC) -o $@ $(PGEN_TEST_OBJS)
+
+$(OBJDIR)/test/sync_server: $(SYNC_SERVER_TEST_OBJS)
+	@mkdir -p $(@D)
+	$(NCC) -o $@ $(SYNC_SERVER_TEST_OBJS) -lstdc++ -lpthread
+
+$(OBJDIR)/test/net: $(NET_TEST_OBJS)
+	@mkdir -p $(@D)
+	$(NCC) -o $@ $(NET_TEST_OBJS) $(NET_TEST_LDFLAGS)
+
+$(OBJDIR)/test/malloc: $(MALLOC_TEST_OBJS)
+	@mkdir -p $(@D)
+	$(NCC) -o $@ $(MALLOC_TEST_OBJS) -lpthread
+
+$(OBJDIR)/test/memcpy: $(MEMCPY_TEST_OBJS)
+	@mkdir -p $(@D)
+	$(NCC) -o $@ $(MEMCPY_TEST_OBJS)
+
+$(OBJDIR)/test/wrapper_client: $(WRAPPER_CLIENT_OBJS)
+	@mkdir -p $(@D)
+	$(NCC) -o $@ $(WRAPPER_CLIENT_OBJS) -lstdc++ -lpthread

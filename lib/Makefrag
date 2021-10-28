@@ -1,0 +1,102 @@
+OBJDIRS += lib lib/$(ARCH)
+
+LIB_SRCFILES :=	\
+        lib/$(ARCH)/syscall_entry.S \
+        lib/$(ARCH)/longjmp.S \
+	lib/$(ARCH)/trapstub.S \
+	lib/$(ARCH)/memcpy.S \
+	lib/$(ARCH)/memset.S \
+	lib/$(ARCH)/strlen.S \
+	lib/$(ARCH)/strcmp.S \
+	lib/$(ARCH)/strcpy.S \
+	lib/$(ARCH)/pagezero.S \
+	lib/$(ARCH)/stacktrace.c \
+	lib/memmove2.c	\
+        lib/syscall.c \
+        lib/arc4.c \
+        lib/printf.c \
+        lib/printfmt.c \
+        lib/sysstring.c \
+        lib/rand.c \
+        lib/panic.c \
+        lib/pfork.c \
+        lib/as.c \
+	lib/processor.c \
+        lib/thread.c \
+        lib/mmap.c \
+	lib/abort.c \
+	lib/sbrk.c \
+	lib/segment.c \
+	lib/libmain.c \
+	lib/rwlock.c \
+	lib/unixfd.c \
+	lib/uidgid.c \
+	lib/backtrace.c \
+	lib/memlayout.c \
+	lib/misc.c \
+	lib/utrap.c \
+	lib/utraphand.c \
+	lib/pthread.c \
+	lib/time.c \
+	lib/error.cc \
+	lib/debug.cc \
+	lib/socket.c \
+	lib/console.c \
+	lib/jnic.c \
+	lib/jnicvirt.c \
+	lib/jnicreal.c \
+	lib/lwipwrap.c \
+	lib/hashtable.c \
+	lib/cygprof.c \
+	lib/sysprof.c \
+	lib/fd.cc \
+	lib/jmonitor.cc \
+	lib/jsysmon.c \
+	lib/stabhelper.c \
+	lib/ummap.c \
+	lib/cpuman.c \
+	lib/fs.c \
+	lib/string.c \
+	lib/qsort2_7.c \
+	lib/msort2_7.c
+
+include lib/cppsup/Makefrag
+
+LIB_OBJFILES := $(LIB_SRCFILES)
+LIB_OBJFILES := $(patsubst lib/%.c, $(OBJDIR)/lib/%.o, $(LIB_OBJFILES))
+LIB_OBJFILES := $(patsubst lib/%.cc, $(OBJDIR)/lib/%.o, $(LIB_OBJFILES))
+LIB_OBJFILES := $(patsubst lib/$(ARCH)/%.S, $(OBJDIR)/lib/$(ARCH)/%.o, $(LIB_OBJFILES))
+
+LIBJOS_CFLAGS	= $(USER_CFLAGS) $(UCLIBC_COMFLAGS)
+LIBJOS_CXXFLAGS	= $(USER_CXXFLAGS) $(UCLIBC_COMFLAGS)
+
+$(OBJDIR)/lib/%.o: lib/%.c
+	@mkdir -p $(@D)
+	$(CC) $(LIBJOS_CFLAGS) $(CSTD) -D_GNU_SOURCE -Werror -c -o $@ $<
+
+$(OBJDIR)/lib/%.S: lib/%.c
+	@mkdir -p $(@D)
+	$(CC) $(LIBJOS_CFLAGS) $(CSTD) -D_GNU_SOURCE -Werror -S -o $@ $<
+
+$(OBJDIR)/lib/%.o: lib/$(ARCH)/%.S
+	@mkdir -p $(@D)
+	$(CC) $(USER_CFLAGS) -c -o $@ $<
+
+$(OBJDIR)/lib/$(ARCH)%.o: lib/$(ARCH)/%.S $(OBJDIR)/lib/utrapasm.h
+	@mkdir -p $(@D)
+	$(CC) $(USER_CFLAGS) -c -o $@ $<
+
+$(OBJDIR)/lib/%.o: lib/%.cc
+	@mkdir -p $(@D)
+	$(CXX) $(LIBJOS_CXXFLAGS) -Werror -c -o $@ $<
+
+$(OBJDIR)/lib/gcc.specs: conf/gcc.specs GNUmakefile
+	cat conf/gcc.specs | sed -e s,MAYBE_GCC_EH,$(shell $(CC) -dumpspecs | grep -q .lgcc_eh && echo -lgcc_eh), -e s,MAYBE_LSTREAMFLOW,$(LSTREAMFLOW), -e s,MAYBE_LSIMALLOC,$(LSIMALLOC), > $@
+
+## Hack to extract struct offsets for assembly use
+$(OBJDIR)/lib/utrapasm.h: $(OBJDIR)/lib/utrapasm.S
+	grep '#define' $< > $@
+
+$(OBJDIR)/lib/libjos.a: $(LIB_OBJFILES)
+	rm -f $@
+	$(AR) r $@ $(LIB_OBJFILES)

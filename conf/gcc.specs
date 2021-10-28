@@ -1,0 +1,5 @@
+*lib:
+%{static:-ljos MAYBE_LSIMALLOC MAYBE_LSTREAMFLOW -lc -lstdc++ -llwip -lsqlite3 -lefsl -lfs}
+
+*libgcc:
+%{static:-lgcc MAYBE_GCC_EH}

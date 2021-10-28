@@ -1,0 +1,12 @@
+include pkg/uclibc/Makefrag
+include pkg/uclibc++/Makefrag
+include pkg/lwip/Makefrag
+include pkg/efsl/Makefrag
+include pkg/sqlite3/Makefrag
+include pkg/lua/Makefrag
+include pkg/streamflow/Makefrag
+include pkg/simalloc/Makefrag
+include pkg/metis/Makefrag
+
+LIB_STREAMFLOW = $(OBJDIR)/lib/libstreamflow.a
+LIB_UCLIBC = $(OBJDIR)/lib/libc.a

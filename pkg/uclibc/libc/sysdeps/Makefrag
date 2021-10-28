@@ -1,0 +1,4 @@
+OBJDIRS += pkg/uclibc/libc/sysdeps/linux/common
+
+LIBC_SRCFILES += \
+	pkg/uclibc/libc/sysdeps/linux/common/time.c
